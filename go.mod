@@ -8,7 +8,6 @@ require (
 	github.com/gofiber/fiber/v2 v2.52.6
 	github.com/gofiber/websocket/v2 v2.2.1
 	github.com/golang-jwt/jwt/v4 v4.5.1
-	github.com/gorilla/websocket v1.5.3
 )
 
 require (
