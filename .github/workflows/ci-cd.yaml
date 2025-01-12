@@ -65,7 +65,7 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: ${{ secrets.SERVER_PORT }}
           script: |
-            cd /github/chatterbox
+            cd github/chatterbox
             git pull https://github.com/elginbrian/chatterbox.git
             docker-compose down
             docker-compose up --build -d
