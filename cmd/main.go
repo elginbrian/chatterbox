@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"chatterbox/internal/api"
-	"chatterbox/internal/middleware"
+	middleware "chatterbox/internal/middlewares"
 	"chatterbox/internal/repositories"
 	"chatterbox/internal/services"
 	"chatterbox/internal/utils"
