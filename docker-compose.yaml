@@ -1,0 +1,32 @@
+version: "3.8"
+
+services:
+  app:
+    build: .
+    ports:
+      - "8082:8080"
+    environment:
+      - PORT=:8082
+      - DATABASE_URL=postgres://user:password@db:5432/fiber_starter?sslmode=disable
+    depends_on:
+      - db
+    networks:
+      - fiber-network
+
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: fiber_starter
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - fiber-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  db_data:
