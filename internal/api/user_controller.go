@@ -4,6 +4,7 @@ import (
 	"chatterbox/internal/models"
 	"chatterbox/internal/services"
 	"chatterbox/internal/utils"
+	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -33,13 +34,16 @@ func (controller *UserController) CreateUser(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Password must be at least 8 characters")
 	}
 
-	user, err := controller.UserService.CreateUser(c.Context(), userRequest)
-	if err != nil {
-		utils.LogError("Failed to create user: " + err.Error())
+	user := controller.UserService.CreateUser(c.Context(), &models.User{
+		Username: userRequest.Username,
+		Email:    userRequest.Email,
+	})
+	if user == nil {
+		utils.LogError("Failed to create user")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to create user")
 	}
 
-	utils.LogInfo("User created successfully: " + user.Username)
+	utils.LogInfo("User created successfully: " + userRequest.Username)
 	return utils.SuccessResponse(c, user, "User created successfully")
 }
 
@@ -50,7 +54,13 @@ func (controller *UserController) GetUserByID(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "User ID is required")
 	}
 
-	user, err := controller.UserService.GetUserByID(c.Context(), userID)
+	userIDInt, err := strconv.Atoi(userID)
+	if err != nil {
+		utils.LogError("Invalid user ID: " + err.Error())
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid user ID")
+	}
+
+	user, err := controller.UserService.GetUserByID(c.Context(), userIDInt)
 	if err != nil {
 		utils.LogError("Failed to retrieve user: " + err.Error())
 		return utils.ErrorResponse(c, fiber.StatusNotFound, "User not found")

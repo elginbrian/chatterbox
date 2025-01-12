@@ -4,6 +4,7 @@ import (
 	"chatterbox/internal/models"
 	"chatterbox/internal/services"
 	"chatterbox/internal/utils"
+	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -27,7 +28,9 @@ func (controller *ChatController) CreateChatRoom(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Chat room name is required")
 	}
 
-	chatRoom, err := controller.ChatService.CreateChatRoom(c.Context(), chatRequest)
+	chatRoom := &models.ChatRoom{}
+	chatRoom.Name = chatRequest.Name
+	err := controller.ChatService.CreateChatRoom(c.Context(), chatRoom)
 	if err != nil {
 		utils.LogError("Failed to create chat room: " + err.Error())
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to create chat room")
@@ -44,7 +47,13 @@ func (controller *ChatController) GetChatByID(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Chat ID is required")
 	}
 
-	chatRoom, err := controller.ChatService.GetChatByID(c.Context(), chatID)
+	chatIDInt, err := strconv.Atoi(chatID)
+	if err != nil {
+		utils.LogError("Invalid chat ID: " + err.Error())
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid chat ID")
+	}
+
+	chatRoom, err := controller.ChatService.GetChatByID(c.Context(), chatIDInt)
 	if err != nil {
 		utils.LogError("Failed to retrieve chat room: " + err.Error())
 		return utils.ErrorResponse(c, fiber.StatusNotFound, "Chat room not found")

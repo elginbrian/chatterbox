@@ -29,7 +29,7 @@ func (controller *AuthController) Login(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Username and password are required")
 	}
 
-	user, err := controller.UserService.GetUserByID(c.Context(), loginRequest.Username)
+	user, err := controller.UserService.GetUserByUsername(c.Context(), loginRequest.Username)
 	if err != nil {
 		utils.LogError("Invalid credentials for user: " + loginRequest.Username)
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Invalid username or password")

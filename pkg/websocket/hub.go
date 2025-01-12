@@ -28,7 +28,7 @@ func (hub *Hub) Run() {
 		case client := <-hub.unregister:
 			if _, ok := hub.clients[client]; ok {
 				delete(hub.clients, client)
-				close(client.Conn)
+				client.Conn.Close()
 				utils.LogInfo("Client disconnected: " + client.ID)
 			}
 
@@ -43,4 +43,8 @@ func (hub *Hub) Run() {
 func (hub *Hub) BroadcastMessage(client *Client, msg []byte) {
 	utils.LogInfo("Broadcasting message from client: " + client.ID)
 	hub.broadcast <- msg
+}
+
+func (h *Hub) Register(client *Client) {
+    h.register <- client
 }

@@ -35,3 +35,13 @@ func (repo *UserRepository) CreateUser(ctx context.Context, user *models.User) e
 	}
 	return nil
 }
+
+func (repo *UserRepository) GetUserByUsername(ctx context.Context, username string) (*models.User, error) {
+	var user models.User
+	query := "SELECT id, username, email, password_hash, created_at FROM users WHERE username=$1"
+	err := repo.DB.QueryRow(ctx, query, username).Scan(&user.ID, &user.Username, &user.Email, &user.PasswordHash, &user.CreatedAt)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user by Username: %v", err)
+	}
+	return &user, nil
+}

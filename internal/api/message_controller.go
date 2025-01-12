@@ -4,6 +4,7 @@ import (
 	"chatterbox/internal/models"
 	"chatterbox/internal/services"
 	"chatterbox/internal/utils"
+	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -26,13 +27,17 @@ func (controller *MessageController) CreateMessage(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Message content is required")
 	}
 
-	message, err := controller.MessageService.CreateMessage(c.Context(), messageRequest)
-	if err != nil {
+	message := &models.Message{
+		Content: messageRequest.Content,
+		ChatID:  messageRequest.ChatID,
+		SenderID:  messageRequest.SenderID,
+	}
+	if err := controller.MessageService.CreateMessage(c.Context(), message); err != nil {
 		utils.LogError("Failed to create message: " + err.Error())
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to create message")
 	}
 
-	utils.LogInfo("Message created successfully in chat room: " + message.ChatID)
+	utils.LogInfo("Message created successfully in chat room: " + strconv.Itoa(message.ChatID))
 	return utils.SuccessResponse(c, message, "Message created successfully")
 }
 
@@ -43,7 +48,12 @@ func (controller *MessageController) GetMessagesByChatID(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Chat ID is required")
 	}
 
-	messages, err := controller.MessageService.GetMessagesByChatID(c.Context(), chatID)
+	chatIDInt, err := strconv.Atoi(chatID)
+	if err != nil {
+		utils.LogError("Invalid chat ID: " + err.Error())
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid chat ID")
+	}
+	messages, err := controller.MessageService.GetMessagesByChatID(c.Context(), chatIDInt)
 	if err != nil {
 		utils.LogError("Failed to retrieve messages: " + err.Error())
 		return utils.ErrorResponse(c, fiber.StatusNotFound, "Messages not found")

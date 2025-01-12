@@ -16,7 +16,7 @@ import (
 )
 
 func main() {
-	db, err := pgxpool.Connect(context.Background(), "postgres://username:password@localhost:5432/chatterbox")
+	db, err := pgxpool.New(context.Background(), "postgres://username:password@localhost:5432/chatterbox")
 	if err != nil {
 		utils.LogError("Unable to connect to database: " + err.Error())
 		log.Fatalf("Unable to connect to database: %v", err)

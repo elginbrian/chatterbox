@@ -1,30 +1,31 @@
 package api
 
 import (
-	"chatterbox/pkg/websocket"
+	websocketPkg "chatterbox/pkg/websocket"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/websocket/v2"
 )
 
 type WebSocketController struct {
-	Hub *websocket.Hub
+	Hub *websocketPkg.Hub
 }
 
-func NewWebSocketController(hub *websocket.Hub) *WebSocketController {
+func NewWebSocketController(hub *websocketPkg.Hub) *WebSocketController {
 	return &WebSocketController{Hub: hub}
 }
 
 func (controller *WebSocketController) HandleWebSocket(c *fiber.Ctx) error {
-	conn, err := websocket.Upgrade(c)
-	if err != nil {
-		return err
+	if websocket.IsWebSocketUpgrade(c) {
+		c.Locals("allowed", true)
+		return websocketPkg.HandleWebSocket(func(conn *websocket.Conn) {
+			client := websocketPkg.NewClient(conn, controller.Hub)
+			controller.Hub.Register(client)
+
+			go client.ReadMessages()
+
+			select {}
+		})(c)
 	}
-
-	client := websocket.NewClient(conn, controller.Hub)
-	controller.Hub.register <- client
-
-	go client.ReadMessages()
-
-	select {}
+	return fiber.ErrUpgradeRequired
 }

@@ -8,3 +8,7 @@ type ChatRoom struct {
 	IsGroup   bool      `json:"is_group"`
 	CreatedAt time.Time `json:"created_at"`
 }
+
+type ChatRequest struct {
+    Name string `json:"name"`
+}
