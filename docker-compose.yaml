@@ -25,7 +25,7 @@ services:
       - chatterbox-network
 
 networks:
-  app-network:
+  chatterbox-network:
     driver: bridge
 
 volumes:
