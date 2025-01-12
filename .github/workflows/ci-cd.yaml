@@ -48,8 +48,8 @@ jobs:
       # Step 3: Build and push Docker image
       - name: Build and push Docker image
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/fiber-starter:latest .
-          docker push ${{ secrets.DOCKER_USERNAME }}/fiber-starter:latest
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/chatterbox:latest .
+          docker push ${{ secrets.DOCKER_USERNAME }}/chatterbox:latest
 
   deploy:
     needs: docker
@@ -65,8 +65,7 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: ${{ secrets.SERVER_PORT }}
           script: |
-            cd github/go-fiber-starter
-            git pull https://github.com/elginbrian/go-fiber-starter.git
-            go mod vendor
+            cd /github/chatterbox
+            git pull https://github.com/elginbrian/chatterbox.git
             docker-compose down
             docker-compose up --build -d

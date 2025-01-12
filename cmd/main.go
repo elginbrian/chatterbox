@@ -1,60 +1,61 @@
 package main
 
 import (
-	"crypto/rand"
-	"database/sql"
-	"encoding/hex"
-	"fiber-starter/config"
-	"fiber-starter/internal/di"
-	"fiber-starter/internal/routes"
-	"fmt"
+	"context"
 	"log"
 
+	"chatterbox/internal/api"
+	"chatterbox/internal/middleware"
+	"chatterbox/internal/repositories"
+	"chatterbox/internal/services"
+	"chatterbox/internal/utils"
+	"chatterbox/pkg/websocket"
+
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func main() {
-	cfg := config.LoadConfig()
-
-	db, err := sql.Open("postgres", cfg.DatabaseURL)
+	db, err := pgxpool.Connect(context.Background(), "postgres://username:password@localhost:5432/chatterbox")
 	if err != nil {
-		log.Fatalf("Could not connect to the database: %v", err)
+		utils.LogError("Unable to connect to database: " + err.Error())
+		log.Fatalf("Unable to connect to database: %v", err)
 	}
+	defer db.Close()
 
-	err = config.MigrateDatabase(db)
-	if err != nil {
-		log.Fatalf("Error applying migrations: %v", err)
-	}
+	userRepo := repositories.NewUserRepository(db)
+	chatRepo := repositories.NewChatRepository(db)
+	messageRepo := repositories.NewMessageRepository(db)
 
-	jwtSecret, err := generateRandomSecret(32)
-	if err != nil {
-		log.Fatalf("Failed to generate JWT secret: %v", err)
-	}
+	userService := services.NewUserService(userRepo)
+	chatService := services.NewChatService(chatRepo)
+	messageService := services.NewMessageService(messageRepo)
 
-	container := di.NewContainer(db, jwtSecret)
+	userController := api.NewUserController(userService)
+	chatController := api.NewChatController(chatService)
+	messageController := api.NewMessageController(messageService)
+	authController := api.NewAuthController(userService)
+
+	hub := websocket.NewHub()
+
+	go hub.Run()
 
 	app := fiber.New()
 
-	app.Use(logger.New())
-	app.Use(cors.New())
+	app.Post("/login", authController.Login)
 
-	routes.SetupRoutes(app, container.UserHandler, container.AuthHandler)
+	protected := app.Group("/api", middleware.AuthMiddleware)
+	protected.Post("/users", userController.CreateUser)
+	protected.Get("/users/:id", userController.GetUserByID)
+	protected.Post("/chatrooms", chatController.CreateChatRoom)
+	protected.Get("/chatrooms/:id", chatController.GetChatByID)
+	protected.Post("/messages", messageController.CreateMessage)
+	protected.Get("/messages/:chat_id", messageController.GetMessagesByChatID)
 
-	err = app.Listen(cfg.Port)
-	if err != nil {
+	app.Get("/ws", api.NewWebSocketController(hub).HandleWebSocket)
+
+	if err := app.Listen(":8080"); err != nil {
+		utils.LogError("Error starting server: " + err.Error())
 		log.Fatalf("Error starting server: %v", err)
 	}
-
-	fmt.Println("Server started successfully!")
-}
-
-func generateRandomSecret(length int) (string, error) {
-	bytes := make([]byte, length)
-	_, err := rand.Read(bytes)
-	if err != nil {
-		return "", err
-	}
-	return hex.EncodeToString(bytes), nil
 }

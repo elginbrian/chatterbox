@@ -1,32 +1,33 @@
-version: "3.8"
+version: "3.9"
 
 services:
   app:
     build: .
+    container_name: chatterbox-app
     ports:
-      - "8082:8080"
+      - "8080:8080"
     environment:
-      - PORT=:8082
-      - DATABASE_URL=postgres://user:password@db:5432/fiber_starter?sslmode=disable
+      - DATABASE_URL=postgres://username:password@db:5432/chatterbox?sslmode=disable
     depends_on:
       - db
     networks:
-      - fiber-network
+      - chatterbox-network
 
   db:
     image: postgres:13
+    container_name: chatterbox-db
     environment:
-      POSTGRES_USER: user
+      POSTGRES_USER: username
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: fiber_starter
+      POSTGRES_DB: chatterbox
     volumes:
-      - db_data:/var/lib/postgresql/data
+      - chatterbox-db-data:/var/lib/postgresql/data
     networks:
-      - fiber-network
+      - chatterbox-network
 
 networks:
-  app-network:
+  chatterbox-network:
     driver: bridge
 
 volumes:
-  db_data:
+  chatterbox-db-data:

@@ -1,21 +1,14 @@
 package routes
 
 import (
-	"fiber-starter/internal/handler"
+	"chatterbox/internal/api"
+	"chatterbox/pkg/websocket"
 
 	"github.com/gofiber/fiber/v2"
 )
 
-func SetupRoutes(app *fiber.App, userHandler *handler.UserHandler, authHandler *handler.AuthHandler) {
-	// User Routes
-	userGroup := app.Group("/api/users")
-	userGroup.Get("/", userHandler.GetAllUsers)
-	userGroup.Post("/", userHandler.CreateUser)
-	userGroup.Put("/:id", userHandler.UpdateUser)
-	userGroup.Delete("/:id", userHandler.DeleteUser)
+func SetupRoutes(app *fiber.App, hub *websocket.Hub) {
+	websocketController := api.NewWebSocketController(hub)
 
-	// Auth Routes
-	authGroup := app.Group("/api/auth")
-	authGroup.Post("/register", authHandler.Register)
-	authGroup.Post("/login", authHandler.Login)
+	app.Get("/ws", websocketController.HandleWebSocket)
 }
