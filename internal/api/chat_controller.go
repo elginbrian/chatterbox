@@ -1,10 +1,14 @@
 package api
 
 import (
+	"chatterbox/internal/db"
 	"chatterbox/internal/models"
 	"chatterbox/internal/services"
 	"chatterbox/internal/utils"
+	"context"
+	"encoding/json"
 	"strconv"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -53,10 +57,30 @@ func (controller *ChatController) GetChatByID(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Invalid chat ID")
 	}
 
+	ctx := context.Background()
+	cacheKey := "chatroom:" + chatID
+	cachedData, err := db.RedisClient.Get(ctx, cacheKey).Result()
+	if err == nil && cachedData != "" {
+
+		var cachedChatRoom models.ChatRoom
+		if err := json.Unmarshal([]byte(cachedData), &cachedChatRoom); err == nil {
+			utils.LogInfo("Chat room retrieved from cache: " + cachedChatRoom.Name)
+			return utils.SuccessResponse(c, cachedChatRoom, "Chat room retrieved successfully")
+		}
+	}
+
 	chatRoom, err := controller.ChatService.GetChatByID(c.Context(), chatIDInt)
 	if err != nil {
 		utils.LogError("Failed to retrieve chat room: " + err.Error())
 		return utils.ErrorResponse(c, fiber.StatusNotFound, "Chat room not found")
+	}
+
+	chatRoomJSON, err := json.Marshal(chatRoom)
+	if err == nil {
+		err = db.RedisClient.Set(ctx, cacheKey, chatRoomJSON, 10*time.Minute).Err()
+		if err != nil {
+			utils.LogError("Failed to cache chat room: " + err.Error())
+		}
 	}
 
 	utils.LogInfo("Chat room retrieved successfully: " + chatRoom.Name)

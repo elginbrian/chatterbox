@@ -23,6 +23,8 @@ func main() {
 	}
 	defer db.Close()
 
+	utils.InitializeRedis("localhost:6379", "", 0)
+
 	userRepo := repositories.NewUserRepository(db)
 	chatRepo := repositories.NewChatRepository(db)
 	messageRepo := repositories.NewMessageRepository(db)
@@ -42,7 +44,9 @@ func main() {
 
 	app := fiber.New()
 
-	app.Post("/login", authController.Login)
+	authGroup := app.Group("/auth")
+	authGroup.Post("/login", authController.Login)
+	authGroup.Post("/register", authController.Register)	
 
 	protected := app.Group("/api", middleware.AuthMiddleware)
 	protected.Post("/users", userController.CreateUser)
