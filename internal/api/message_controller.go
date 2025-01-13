@@ -1,7 +1,6 @@
 package api
 
 import (
-	"chatterbox/internal/db"
 	"chatterbox/internal/models"
 	"chatterbox/internal/services"
 	"chatterbox/internal/utils"
@@ -9,6 +8,8 @@ import (
 	"encoding/json"
 	"strconv"
 	"time"
+
+	"chatterbox/internal/db"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -69,7 +70,7 @@ func (controller *MessageController) GetMessagesByChatID(c *fiber.Ctx) error {
 	cacheKey := "messages:chat:" + chatID
 	cachedData, err := db.RedisClient.Get(ctx, cacheKey).Result()
 	if err == nil && cachedData != "" {
-
+	
 		var cachedMessages []models.Message
 		if err := json.Unmarshal([]byte(cachedData), &cachedMessages); err == nil {
 			utils.LogInfo("Messages retrieved from cache for chat room: " + chatID)

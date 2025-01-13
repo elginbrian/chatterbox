@@ -1,4 +1,4 @@
-package middlewares
+package middleware
 
 import (
 	"chatterbox/internal/db"
@@ -8,17 +8,18 @@ import (
 )
 
 func SessionMiddleware(c *fiber.Ctx) error {
-    token := c.Get("Authorization")
-    if token == "" {
-        return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
-    }
+	token := c.Get("Authorization")
+	if token == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
+	}
 
-    ctx := context.Background()
-    userID, err := db.RedisClient.Get(ctx, token).Result()
-    if err != nil {
-        return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid session"})
-    }
+	ctx := context.Background()
+	userID, err := db.GetRedisClient().Get(ctx, token).Result()
 
-    c.Locals("userID", userID)
-    return c.Next()
+	if err != nil || userID == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid session"})
+	}
+
+	c.Locals("userID", userID)
+	return c.Next()
 }

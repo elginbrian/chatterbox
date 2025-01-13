@@ -50,7 +50,6 @@ func (controller *ChatController) GetChatByID(c *fiber.Ctx) error {
 	if !utils.ValidateRequired(chatID) {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Chat ID is required")
 	}
-
 	chatIDInt, err := strconv.Atoi(chatID)
 	if err != nil {
 		utils.LogError("Invalid chat ID: " + err.Error())
@@ -60,8 +59,8 @@ func (controller *ChatController) GetChatByID(c *fiber.Ctx) error {
 	ctx := context.Background()
 	cacheKey := "chatroom:" + chatID
 	cachedData, err := db.RedisClient.Get(ctx, cacheKey).Result()
-	if err == nil && cachedData != "" {
 
+	if err == nil && cachedData != "" {
 		var cachedChatRoom models.ChatRoom
 		if err := json.Unmarshal([]byte(cachedData), &cachedChatRoom); err == nil {
 			utils.LogInfo("Chat room retrieved from cache: " + cachedChatRoom.Name)

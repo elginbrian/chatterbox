@@ -6,7 +6,6 @@ import (
 	"chatterbox/internal/models"
 	"chatterbox/internal/services"
 	"chatterbox/internal/utils"
-	"context"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -50,8 +49,7 @@ func (controller *AuthController) Login(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to generate token")
 	}
 
-	ctx := context.Background()
-	if err := db.RedisClient.Set(ctx, token, user.ID, 24*time.Hour).Err(); err != nil {
+	if err := db.RedisClient.Set(c.Context(), token, user.ID, 24*time.Hour).Err(); err != nil {
 		utils.LogError("Failed to store token in Redis: " + err.Error())
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to process login")
 	}

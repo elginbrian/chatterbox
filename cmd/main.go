@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"chatterbox/internal/api"
+	"chatterbox/internal/db"
 	middleware "chatterbox/internal/middlewares"
 	"chatterbox/internal/repositories"
 	"chatterbox/internal/services"
@@ -16,14 +17,14 @@ import (
 )
 
 func main() {
+	db.InitRedis()
+	
 	db, err := pgxpool.New(context.Background(), "postgres://username:password@localhost:5432/chatterbox")
 	if err != nil {
 		utils.LogError("Unable to connect to database: " + err.Error())
 		log.Fatalf("Unable to connect to database: %v", err)
 	}
 	defer db.Close()
-
-	utils.InitializeRedis("localhost:6379", "", 0)
 
 	userRepo := repositories.NewUserRepository(db)
 	chatRepo := repositories.NewChatRepository(db)
