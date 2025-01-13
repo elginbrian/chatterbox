@@ -10,9 +10,9 @@ import (
 var RedisClient *redis.Client
 
 func InitRedis() {
-	redis.NewClient(&redis.Options{
+	RedisClient = redis.NewClient(&redis.Options{
 		Addr: "chatterbox_redis:6379", 
-	})	
+	})
 
 	_, err := RedisClient.Ping(context.Background()).Result()
 	if err != nil {
